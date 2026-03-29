@@ -3,7 +3,7 @@ set -eu
 
 REGISTRY="ghcr.io"
 REPO="clustrun/clust-cli"
-INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+INSTALL_DIR="${INSTALL_DIR:-$HOME/.clust/bin}"
 
 detect_platform() {
   os=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -85,14 +85,22 @@ fetch_binary() {
   chmod +x "$binary"
 
   # Install
-  if [ -w "$INSTALL_DIR" ]; then
-    mv "$binary" "${INSTALL_DIR}/clust"
-  else
-    echo "Installing to ${INSTALL_DIR} (requires sudo)"
-    sudo mv "$binary" "${INSTALL_DIR}/clust"
-  fi
+  mkdir -p "$INSTALL_DIR"
+  mv "$binary" "${INSTALL_DIR}/clust"
 
   echo "clust installed to ${INSTALL_DIR}/clust"
+
+  # Hint about PATH if not already on it
+  case ":$PATH:" in
+    *":${INSTALL_DIR}:"*) ;;
+    *)
+      echo ""
+      echo "Add clust to your PATH:"
+      echo "  export PATH=\"${INSTALL_DIR}:\$PATH\""
+      echo ""
+      echo "To make it permanent, add that line to your shell profile (~/.bashrc, ~/.zshrc, etc.)"
+      ;;
+  esac
 }
 
 main() {
